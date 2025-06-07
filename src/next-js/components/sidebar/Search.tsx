@@ -23,11 +23,7 @@ export default function Search() {
   return (
     <div className="sticky top-0 w-full bg-black group z-10 pt-2">
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      <form
-        action={formAction}
-        className="flex items-center border-2 border-solid border-lighthover rounded-full pl-4 focus-within:border-2 focus-within:border-blue-400 z-10"
-        style={anchor as any}
-      >
+      <form action={formAction} className="flex items-center border-2 border-solid border-lighthover rounded-full pl-4 focus-within:border-2 focus-within:border-blue-400 z-10" style={anchor as any}>
         <label htmlFor="search">
           <SearchIcon width={20} height={20} />
         </label>
