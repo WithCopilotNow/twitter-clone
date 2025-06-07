@@ -6,12 +6,12 @@ export default auth((req) => {
     const loginUrl = new URL("/login", req.nextUrl.origin);
     return NextResponse.redirect(loginUrl);
   }
-  if(req.auth && (req.nextUrl.pathname === "/" || req.nextUrl.pathname === "/login")){
+  if (req.auth && (req.nextUrl.pathname === "/" || req.nextUrl.pathname === "/login")) {
     const homeUrl = new URL("/home", req.nextUrl.origin);
     return NextResponse.redirect(homeUrl);
   }
-  return NextResponse.next();
-})
+  return NextResponse.next(); 
+});
 
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.css).*)"],

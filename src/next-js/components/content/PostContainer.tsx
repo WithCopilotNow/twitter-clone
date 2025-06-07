@@ -4,6 +4,7 @@ import PostOptionsDialog from "./PostOptionsDialog";
 import PostFooter from "./PostFooter";
 import Link from "next/link";
 import { User } from "next-auth";
+import { getUserId } from "@/next-js/server-action/actions";
 
 type PostContainerProps = {
   postData: DbPostType,
@@ -23,6 +24,8 @@ export default async function PostContainer({postData, user, likeAction, comment
     } = postData;
     const time = await getTime(createdAt);
     const url = (postId) ? `/posts/${postId}/comments/${_id.toHexString()}` : `/posts/${_id.toHexString()}`;
+    const userId = await getUserId();
+
   return (
     <section className="px-4 py-1 flex gap-x-2 border-y-1 border-lighthover min-w-md">
       <div className="size-10 rounded-full bg-lighthover overflow-hidden mt-3 shrink-0">
@@ -38,7 +41,7 @@ export default async function PostContainer({postData, user, likeAction, comment
           <h2 className="text-gray-500">
             <Link href={`/${postData.owner.userId}`} className="block size-full">{`@${owner.userId} . ${time}`}</Link>
           </h2>
-          <PostOptionsDialog owner={owner} user={user} />
+          <PostOptionsDialog owner={owner} user={user} userId={userId} />
         </div>
         <p>
           <Link href={url} className="block">{title}</Link>
@@ -48,7 +51,7 @@ export default async function PostContainer({postData, user, likeAction, comment
             <img src={media.dataUrl} alt={media.mediaName} className="size-full object-contain"/>
           </Link>
         </div>)}
-        <PostFooter postData={postData} user={user} likeAction={likeAction} commentAction={commentAction} commentParentId={postId}/>
+        <PostFooter postData={postData} user={user} likeAction={likeAction} commentAction={commentAction} userId={userId}/>
       </div>
     </section>
   )

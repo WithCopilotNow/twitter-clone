@@ -51,7 +51,7 @@ export const searchAction = async (prevState: DbUserType[], formData: FormData):
 export const createPostAction = async (formData: FormData): Promise<void> => {
     try {
         const user = await isAuthorized()
-        const dbUser = await User.findOne({_id: new mongoose.Types.ObjectId(user.id)});
+        const dbUser = await User.findOne({githubId: user.id});
         if(!dbUser) throw new Error("User not found");
         const parsedUser = dbUserSchema.parse(dbUser);
         const clientPost = Object.fromEntries(formData);
@@ -100,22 +100,22 @@ const likeActionSchema = z.object({
 export async function postLikeAction(formData: FormData) {
     try {
         const user = await isAuthorized();
-        const userId = new mongoose.Types.ObjectId(user.id);
-        const dbUser = await User.findOne({_id: userId});
+        const dbUser = await User.findOne({githubId: user.id});
         if(!dbUser) throw new Error("User not found");
-        dbUserSchema.parse(dbUser);
+        const parsedUser = dbUserSchema.parse(dbUser);
         const parsedLikeData = likeActionSchema.parse(Object.fromEntries(formData));
         const postId = new mongoose.Types.ObjectId(parsedLikeData.id);
-        const dbPostComment = await Post.findOne({_id: postId}).populate("owner");
-        if(!dbPostComment) throw new Error("Post not found");
-        const parsedPost = dbPostSchema.parse(dbPostComment);
+        const dbPost = await Post.findOne({_id: postId}).populate("owner");
+        if(!dbPost) throw new Error("Post not found");
+        const parsedPost = dbPostSchema.parse(dbPost);
         if(parsedLikeData.likePost === "true"){
-            dbPostComment.likes.push(userId);
-            await dbPostComment.save();
+            dbPost.likes.push(new mongoose.Types.ObjectId(parsedUser._id));
+            await dbPost.save();
             return;
         }
-        dbPostComment.likes = parsedPost.likes.filter((like) => like.toHexString() != userId.toHexString());
-        await dbPostComment.save();
+        dbPost.likes = parsedPost.likes.filter((like) => like.toHexString() != parsedUser._id);
+        await dbPost.save();
+        revalidatePath(`/post/${parsedPost._id.toHexString()}`);
     } catch (err) {
         console.log(err);
         throw err;
@@ -177,30 +177,30 @@ export async function getPost(postId: string): Promise<DbPostType> {
 export async function createCommentAction(formData: FormData) {
     try {
         const user = await isAuthorized()
-        const dbUser = await User.findOne({_id: new mongoose.Types.ObjectId(user.id)});
+        const dbUser = await User.findOne({githubId: user.id});
         if(!dbUser) throw new Error("User not found");
         const parsedUser = dbUserSchema.parse(dbUser);
-        const clientComment = Object.fromEntries(formData);
-        const parsedClientComment = clientCommentSchema.parse(clientComment);
-        const dbPostComment = await Post.findOne({_id: new mongoose.Types.ObjectId(parsedClientComment.postId)}).populate("owner");
-        if(!dbPostComment) throw new Error("Post not found.");
-        const parsedPost = dbPostSchema.parse(dbPostComment);
+        const clientCommentData = Object.fromEntries(formData);
+        const parsedClientCommentData = clientCommentSchema.parse(clientCommentData);
+        const dbPost = await Post.findOne({_id: new mongoose.Types.ObjectId(parsedClientCommentData.postId)}).populate("owner");
+        if(!dbPost) throw new Error("Post not found.");
+        const parsedPost = dbPostSchema.parse(dbPost);
         const commentData: Pick<PostType, "owner" | "title" | "media"> = {
             owner: new mongoose.Types.ObjectId(parsedUser._id), 
-            title: parsedClientComment.title,
+            title: parsedClientCommentData.title,
         }
-        if(parsedClientComment.file && parsedClientComment.file.size > 0){
-            const buffer = Buffer.from(await parsedClientComment.file.arrayBuffer());
+        if(parsedClientCommentData.file && parsedClientCommentData.file.size > 0){
+            const buffer = Buffer.from(await parsedClientCommentData.file.arrayBuffer());
             commentData.media = {
-                size: parsedClientComment.file.size,
-                mimeType: parsedClientComment.file.type,
-                mediaName: parsedClientComment.file.name,
+                size: parsedClientCommentData.file.size,
+                mimeType: parsedClientCommentData.file.type,
+                mediaName: parsedClientCommentData.file.name,
                 source: buffer.toString("base64")
             }
         }
         const comment = await Comment.create(commentData);
-        dbPostComment.comments.push(comment._id);
-        dbPostComment.save();
+        dbPost.comments.push(comment._id);
+        dbPost.save();
         revalidatePath(`/post/${parsedPost._id.toHexString()}`);
     } catch (err) {
         console.log(`Error while composing comment: ${err}`);
@@ -240,20 +240,19 @@ export async function getCommentComments(commentId: string) {
 export async function commentLikeAction(formData: FormData) {
     try {
         const user = await isAuthorized();
-        const userId = new mongoose.Types.ObjectId(user.id);
-        const dbUser = await User.findOne({_id: userId});
+        const dbUser = await User.findOne({githubId: user.id});
         if(!dbUser) throw new Error("User not found");
-        dbUserSchema.parse(dbUser);
+        const parsedUser = dbUserSchema.parse(dbUser);
         const parsedLikeData = likeActionSchema.parse(Object.fromEntries(formData));
         const dbComment = await Comment.findOne({_id: new mongoose.Types.ObjectId(parsedLikeData.id)}).populate("owner");
         if(!dbComment) throw new Error("Comment post not found.");
         dbDeCommentSchema.parse(dbComment);
         if(parsedLikeData.likePost === "true"){
-            dbComment.likes.push(userId);
+            dbComment.likes.push(new mongoose.Types.ObjectId(parsedUser._id));
             await dbComment.save();
             return;
         }
-        dbComment.likes = dbComment.likes.filter((like) => like.toHexString() != userId.toHexString());
+        dbComment.likes = dbComment.likes.filter((like) => like.toHexString() != parsedUser._id);
         await dbComment.save();
     } catch (err) {
         console.log(err)
@@ -265,33 +264,46 @@ export async function commentLikeAction(formData: FormData) {
 export async function createCominCom(formData: FormData) {
     try {
         const user = await isAuthorized()
-        const dbUser = await User.findOne({_id: new mongoose.Types.ObjectId(user.id)});
+        const dbUser = await User.findOne({githubId: user.id});
         if(!dbUser) throw new Error("User not found");
         const parsedUser = dbUserSchema.parse(dbUser);
         const clientComment = Object.fromEntries(formData);
-        const parsedClientComment = clientCommentSchema.parse(clientComment);
-        const dbPostComment = await Comment.findOne({_id: new mongoose.Types.ObjectId(parsedClientComment.postId)}).populate("owner");
-        if(!dbPostComment) throw new Error("Post not found.");
+        const parsedClientCommentData = clientCommentSchema.parse(clientComment);
+        const dbPostComment = await Comment.findOne({_id: new mongoose.Types.ObjectId(parsedClientCommentData.postId)}).populate("owner");
+        if(!dbPostComment) throw new Error("Comment not found.");
         dbDeCommentSchema.parse(dbPostComment);
         const commentData: Pick<PostType, "owner" | "title" | "media"> = {
             owner: new mongoose.Types.ObjectId(parsedUser._id), 
-            title: parsedClientComment.title,
+            title: parsedClientCommentData.title,
         }
-        if(parsedClientComment.file && parsedClientComment.file.size > 0){
-            const buffer = Buffer.from(await parsedClientComment.file.arrayBuffer());
+        if(parsedClientCommentData.file && parsedClientCommentData.file.size > 0){
+            const buffer = Buffer.from(await parsedClientCommentData.file.arrayBuffer());
             commentData.media = {
-                size: parsedClientComment.file.size,
-                mimeType: parsedClientComment.file.type,
-                mediaName: parsedClientComment.file.name,
+                size: parsedClientCommentData.file.size,
+                mimeType: parsedClientCommentData.file.type,
+                mediaName: parsedClientCommentData.file.name,
                 source: buffer.toString("base64")
             }
         }
         const comment = await Comment.create(commentData);
         dbPostComment.comments.push(comment._id);
         dbPostComment.save();
-        revalidatePath(`/posts/${parsedClientComment.id}/comments/${parsedClientComment.postId}`)
+        revalidatePath(`/posts/${parsedClientCommentData.id}/comments/${parsedClientCommentData.postId}`)
     } catch (err) {
         console.log(`Error while composing comment: ${err}`);
         throw err;
+    }
+}
+
+export async function getUserId() {
+    try {
+        const user = await isAuthorized();
+        const dbUser = await User.findOne({githubId: user.id});
+        if(!dbUser) throw new Error("User not found");
+        const parsedUser = dbUserSchema.parse(dbUser);
+        return parsedUser._id;
+    } catch (error) {
+        console.log(error);
+        throw error;
     }
 }

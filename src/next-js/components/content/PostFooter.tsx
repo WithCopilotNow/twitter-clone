@@ -1,4 +1,4 @@
-import { bookmarkPostAction } from "@/next-js/server-action/actions";
+import { bookmarkPostAction, getUserId } from "@/next-js/server-action/actions";
 import CommentDialog from "./dialogs/CommentDialog";
 import RepostDialog from "./dialogs/RepostDialog";
 import ShareDialog from "./dialogs/ShareDialog";
@@ -12,17 +12,17 @@ import { DbCommentType } from "@/models/comment";
 type PostFooterType = {
   postData: DbPostType | DbCommentType,
   user: User,
+  userId: string,
   likeAction: (formData: FormData) => void,
   commentAction: (formData: FormData) => void,
-  commentParentId?: string
 }
 
-export default async function PostFooter({postData, user, likeAction, commentAction, commentParentId}: PostFooterType) {
+export default async function PostFooter({postData, user, userId, likeAction, commentAction}: PostFooterType) {
   const  {
     _id,
     likes
   } = postData;
-  const isLiked = likes.some((like) => like.toHexString() === user.id);
+  const isLiked = likes.some((like) => like.toHexString() === userId);
   return (
     <div className="flex justify-between items-center pb-1">
       <CommentDialog postData={postData} user={user} commentAction={commentAction}/>

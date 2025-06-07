@@ -1,44 +1,39 @@
 import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
-import { dbUserSchema, User } from "./models/user";
-import { connectToDatabase } from "./lib/db";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [GitHub],
+  session: {
+    strategy: "jwt",
+  },
   callbacks: {
-    async signIn({ user, account }) {
-      try {
-        if (!account || !account.providerAccountId) throw new Error("account is null, undefined, or providerAccountId is missing.")
-        await connectToDatabase();
-        const dbUser = await User.findOne({ githubId: account.providerAccountId });
-        if (!dbUser) {
-          await User.create({
+    async jwt({ token, user, account }) {
+      if (user && account) {
+        token.githubId = account.providerAccountId;
+        token.name = user.name;
+        token.email = user.email;
+        token.avatarUrl = user.image;
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
             githubId: account.providerAccountId,
             name: user.name,
             email: user.email,
             avatarUrl: user.image,
-          });
-        }
-        dbUserSchema.parse(dbUser);
-        return true;
-      } catch (err) {
-        console.error("Error while creating new user: ", err);
-        return false;
+          }),
+        });
       }
+      return token;
     },
-    async session({ session }) {
-      try {
-        if(!session.user.email) throw new Error("Invalid Email");
-        await connectToDatabase();
-        const dbUser = await User.findOne({ email: session.user.email });
-        const parsedUser = dbUserSchema.parse(dbUser);
-        session.user.id = parsedUser._id;
-        session.user.email = parsedUser.userId;
-      } catch (err) {
-        console.error(err);
-      } finally {
-        return session;
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = `${token.githubId}`;
+        session.user.email = token.email?.split("@")[0] || "";
+        session.user.name = token.name;
+        session.user.image = token.picture;
       }
+      return session;
     },
   },
 });

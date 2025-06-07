@@ -44,15 +44,15 @@ export const User: mongoose.Model<UserType> = mongoose.models?.User || mongoose.
 export const dbUserSchema = z.object({
     _id: z.instanceof(mongoose.Types.ObjectId).transform((val) => val.toHexString()),
     githubId: z.string().nonempty(),
+    email: z.email(),
     name: z.string().nonempty(),
     userId: z.string().nonempty(),
-    email: z.email(),
     avatarUrl: z.url().optional(),
     createdAt: z.coerce.date(),
     updatedAt: z.coerce.date(),
     followers: z.array(z.instanceof(mongoose.Types.ObjectId)),
     following: z.array(z.instanceof(mongoose.Types.ObjectId)),
-    postCount: z.number().positive(),
+    postCount: z.number(),
     bgUrl: dbMediaSchema,
 })
 

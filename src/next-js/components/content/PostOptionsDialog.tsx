@@ -1,4 +1,4 @@
-import { getUniqueId } from "@/next-js/server-action/actions"
+import { getUniqueId, getUserId } from "@/next-js/server-action/actions"
 import MoreHoriIcon from "../svg/MoreHoriIcon"
 import GrokIcon from "../svg/GrokIcon"
 import { DbPostType } from "@/models/post";
@@ -20,14 +20,15 @@ type postOptionsType = {
 }
 
 type PostOptionsDialogProps = {
-   user: User
+   user: User,
+   userId: string
 } & Pick<DbPostType, "owner">;
 
-export default async function PostOptionsDialog({owner, user}: PostOptionsDialogProps) {0
+export default async function PostOptionsDialog({owner, user, userId}: PostOptionsDialogProps) {0
     const id = await getUniqueId()
     const anchor = { anchorName: `${id}-anchor` }
     const position = { positionAnchor: `${id}-anchor`, positionArea: "bottom center" }
-    const follow: boolean = owner.followers.some((like) => like.toHexString() === user.id);
+    const follow: boolean = owner.followers.some((like) => like.toHexString() === userId);
     const postOptions: postOptionsType[] = [
       {text: `Add/remove ${owner.userId} from Lists`, Icon: AddToListIcon },
       {text: `Mute ${owner.userId}`, Icon: MuteIcon },
