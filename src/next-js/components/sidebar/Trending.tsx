@@ -18,7 +18,7 @@ const dummyTrandingData: TrandingDataType[] = [
 export default async function Trending() {
   return (
     <div className="border-1 border-lighthover rounded-lg overflow-hidden">
-      <h1 className="p-4 text-2xl font-bold">What's happening</h1>
+      <h1 className="p-4 text-2xl font-bold">Whats happening</h1>
       <ul>
         {dummyTrandingData.map((dummyData) => (
           <li key={dummyData.title}>

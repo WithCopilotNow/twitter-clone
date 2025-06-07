@@ -5,6 +5,7 @@ import PostFooter from "../content/PostFooter"
 import { getTime } from "@/next-js/utility/getTime"
 import { DbCommentType } from "@/models/comment"
 import { createCominCom, getUserId } from "@/next-js/server-action/actions"
+import Image from "next/image"
 
 type CommentPostContainerProps = {
     postData: DbCommentType,
@@ -24,9 +25,7 @@ export default async function CommentPostContainer({postData, user, likeAction}:
     <section className="px-4 border-y-1 border-lighthover">
       <div className="flex items-center gap-x-2 py-2">
         <div className="size-10 rounded-full bg-lighthover overflow-hidden shrink-0">
-          <Link href={`/${postData.owner.userId}`} className="block size-full">
-            <img src={owner.avatarUrl || undefined} alt="" className="size-full object-cover"/>
-          </Link>
+          <Link href={`/${postData.owner.userId}`} className="block size-full bg-no-repeat bg-cover" style={{backgroundImage: `url(${owner.avatarUrl})` || undefined}}></Link>
         </div>
         <div className="grow-1 flex items-center">
           <div className="grow-1 flex flex-col items-start">
@@ -44,7 +43,7 @@ export default async function CommentPostContainer({postData, user, likeAction}:
       <div>
         <p className="pt-1 pb-2">{title}</p>
         {media && (<div className="w-full aspect-video rounded-2xl bg-lighthover overflow-hidden my-2">
-          <img src={media.dataUrl} alt={media.mediaName} className="size-full object-contain"/>
+          <Image src={media.dataUrl} alt="" layout="fill" objectFit="contain"/>
         </div>)}
         <p className="text-gray-500 py-2 border-b-1 border-lighthover">{`${createdAt.toLocaleTimeString("en-IN", {hour: "2-digit", minute: "2-digit"})} . ${createdAt.toLocaleString("en-IN", {month: "short", year: "numeric"})}`}</p>
         <PostFooter postData={postData} user={user} likeAction={likeAction} commentAction={createCominCom} userId={userId}/>

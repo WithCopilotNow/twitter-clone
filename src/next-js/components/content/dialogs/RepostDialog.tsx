@@ -13,6 +13,7 @@ export default async function RepostDialog() {
   }
   return (
     <div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <button type="button" popoverTarget={id} className="p-2 rounded-full hover:bg-lightblue group transition-colors relative" style={anchor as any}>
         <RepostIcon width={20} height={20} className="stroke-gray-400 group-hover:stroke-green-500 transition-colors"/>
         <span className="hidden absolute bg-gray-600 text-white px-1 rounded-sm -bottom-1/1 left-1/2 -translate-1/2 group-hover:block starting:opacity-0 transition-opacity delay-500">Repost</span>

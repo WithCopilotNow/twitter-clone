@@ -16,7 +16,7 @@ export default async function PostsContainer({dbPosts, user, likeAction, comment
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <section className="pb-50">
-        {dbPosts.map((post) => <PostContainer key={post._id?.toHexString()} postData={post} user={user} likeAction={likeAction} commentAction={commentAction} postId={postId}/>)}
+        {dbPosts.map((post) => <PostContainer key={post._id.toHexString()} postData={post} user={user} likeAction={likeAction} commentAction={commentAction} postId={postId}/>)}
       </section>
     </Suspense>
   )

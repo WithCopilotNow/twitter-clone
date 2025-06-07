@@ -33,7 +33,7 @@ export default async function CommentDialog({postData, user, commentAction, comm
           height={20}
           className="stroke-gray-400 group-hover:stroke-blue-500 transition-colors"
         />
-        <span className="text-gray-400">{`${commentCount > 0 ? commentCount : ""}`}</span>
+        <span className={`${commentCount > 0 ? "text-gray-400" : "text-transparent"}`}>{`${commentCount > 0 ? commentCount : ""}`}</span>
         <span className="hidden absolute bg-gray-600 text-white px-1 rounded-sm -bottom-1/1 left-1/2 -translate-1/2 group-hover:block starting:opacity-0 transition-opacity delay-500">
           Comment
         </span>
@@ -66,14 +66,9 @@ export default async function CommentDialog({postData, user, commentAction, comm
             <div className="flex flex-col items-center">
               <Link
                 href={`/${owner.userId}`}
-                className="block size-10 rounded-full bg-lighthover overflow-hidden shrink-0"
-              >
-                <img
-                  src={owner.avatarUrl || undefined}
-                  alt=""
-                  className="size-full object-cover"
-                />
-              </Link>
+                className="block size-10 rounded-full bg-lighthover overflow-hidden shrink-0 bg-no-repeat bg-cover"
+                style={{backgroundImage: `url(${owner.avatarUrl})` || undefined}}
+              ></Link>
               <div className="grow-1 w-1 bg-lighthover"></div>
             </div>
             <div className="grow-1 min-h-30">
@@ -99,13 +94,7 @@ export default async function CommentDialog({postData, user, commentAction, comm
           </div>
           <div className="grow flex px-4 pb-2">
             <div className="size-10 rounded-full bg-gray-500 shrink-0 overflow-hidden">
-              <Link href={`/${user.email}`} className="block size-full">
-                <img
-                  src={user.image || undefined}
-                  alt=""
-                  className="size-full object-cover"
-                />
-              </Link>
+              <Link href={`/${user.email}`} className="block size-full bg-no-repeat bg-cover" style={{backgroundImage: `url(${user.image})` || undefined}}></Link>
             </div>
             <div className="grow min-h-30">
               <textarea

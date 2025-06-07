@@ -10,9 +10,7 @@ export default async function NavbarFooter({user}: NavbarFooterProps) {
   return (
     <div className="mt-auto mb-4">
       <button type="button" popoverTarget="accountSettings" className="w-full flex items-center hover:bg-lighthover p-2 rounded-lg [anchor-name:--settingDialong-anchor]">
-        <div className="size-10 rounded-full bg-gray-500 shrink-0 overflow-hidden">
-          <img src={user.image || undefined} alt={`${user.name}`} className="size-full object-cover"/>
-        </div>
+        <div className="size-10 rounded-full bg-gray-500 shrink-0 overflow-hidden bg-no-repeat bg-cover" style={{backgroundImage: `url(${user.image})` || undefined}}></div>
         <div className="px-3 text-sm text-left max-xl:hidden">
           <h1 className="font-bold">{user.name}</h1>
           <span className="text-gray-400 font-semibold">{`@${user.email}`}</span>

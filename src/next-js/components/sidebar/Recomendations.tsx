@@ -42,9 +42,7 @@ export default async function Recomendations() {
         {dummyRecomendations.map((recomendation) => (
           <li key={recomendation.githubId} className="flex items-center px-4 py-2">
             <div>
-              <Link href={`/${recomendation.email}`}  className="block size-10 rounded-lg bg-lighthover overflow-hidden cursor-pointer">
-                <img src={recomendation.avatarUrl || undefined} alt={recomendation.name} className="size-full object-cover hover:opacity-80 transition-opacity" />
-              </Link>
+              <Link href={`/${recomendation.email}`}  className="block size-10 rounded-lg bg-lighthover overflow-hidden cursor-pointer bg-no-repeat bg-cover hover:opacity-80 transition-opacity" style={{backgroundImage: `url(${recomendation.avatarUrl})` || undefined}}></Link>
             </div>
             <div className="grow-1 ml-3 cursor-pointer">
               <Link href={`/${recomendation.email}`} className="block font-bold w-max hover:underline">{recomendation.name}</Link>

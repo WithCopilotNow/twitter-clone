@@ -16,6 +16,7 @@ export default async function MoreOptionsDialog() {
 
   return (
     <div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <button type="button" popoverTarget={id} className="group p-1 rounded-full hover:bg-lighthover relative cursor-pointer" style={anchor as any}>
         <MoreHoriIcon width={20} height={20} className="group-hover:fill-blue-400"/>
         <span className="absolute -translate-x-2 translate-y-1 text-sm bg-gray-600 px-1 rounded-xs group-hover:block hidden starting:opacity-0 transition-opacity delay-500 min-w-max">More</span>

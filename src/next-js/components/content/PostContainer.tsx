@@ -5,6 +5,7 @@ import PostFooter from "./PostFooter";
 import Link from "next/link";
 import { User } from "next-auth";
 import { getUserId } from "@/next-js/server-action/actions";
+import Image from "next/image";
 
 type PostContainerProps = {
   postData: DbPostType,
@@ -29,9 +30,7 @@ export default async function PostContainer({postData, user, likeAction, comment
   return (
     <section className="px-4 py-1 flex gap-x-2 border-y-1 border-lighthover min-w-md">
       <div className="size-10 rounded-full bg-lighthover overflow-hidden mt-3 shrink-0">
-        <Link href={`/${postData.owner.userId}`} className="block size-full">
-          <img src={owner.avatarUrl || undefined} alt="" className="size-full object-cover"/>
-        </Link>
+        <Link href={`/${postData.owner.userId}`} className="block size-full bg-no-repeat bg-cover" style={{backgroundImage: `url(${owner.avatarUrl})`}}></Link>
       </div>
       <div className="grow-1">
         <div className="flex items-end gap-x-1">
@@ -47,8 +46,8 @@ export default async function PostContainer({postData, user, likeAction, comment
           <Link href={url} className="block">{title}</Link>
         </p>
         {media && (<div className="w-full aspect-video rounded-2xl bg-lighthover overflow-hidden my-2">
-          <Link href={url} className="block size-full">
-            <img src={media.dataUrl} alt={media.mediaName} className="size-full object-contain"/>
+          <Link href={url} className="block size-full relative">
+            <Image src={media.dataUrl} alt="" layout="fill" objectFit="contain"/>
           </Link>
         </div>)}
         <PostFooter postData={postData} user={user} likeAction={likeAction} commentAction={commentAction} userId={userId}/>

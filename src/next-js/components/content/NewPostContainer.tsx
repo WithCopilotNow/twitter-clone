@@ -14,9 +14,7 @@ export default async function NewPostContainer({user}: NewPostContainerProps) {
     <form action={createPostAction} className="flex flex-col p-4 pb-0">
       <div className="grow flex">
         <div>
-          <Link href={`/${user.email}`} className="block size-10 rounded-full bg-gray-500 shrink-0 overflow-hidden">
-            <img src={user.image || "https://picsum.photos/seed/picsum/200/300"} alt={user.name || undefined} className="size-full object-cover" />
-          </Link>
+          <Link href={`/${user.email}`} className="block size-10 rounded-full bg-gray-500 shrink-0 overflow-hidden bg-no-repeat bg-cover" style={{backgroundImage: `url(${user.image})` || "url(https://picsum.photos/seed/picsum/200/300)"}}></Link>
         </div>
         <div className="grow-1">
           <textarea name="title" id="title" placeholder="What's happening?" className="w-full resize-none outline-none field-sizing-content text-xl p-2 text-white break-all" required></textarea>

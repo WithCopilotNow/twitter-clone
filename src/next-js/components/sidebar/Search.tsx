@@ -22,6 +22,7 @@ export default function Search() {
   }
   return (
     <div className="sticky top-0 w-full bg-black group z-10 pt-2">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <form
         action={formAction}
         className="flex items-center border-2 border-solid border-lighthover rounded-full pl-4 focus-within:border-2 focus-within:border-blue-400 z-10"
@@ -59,13 +60,7 @@ export default function Search() {
                   }}
                   className="w-full flex items-center hover:bg-lighthover p-4 rounded-lg"
                 >
-                  <div className="size-10 rounded-full bg-gray-500 shrink-0 overflow-hidden">
-                    <img
-                      src={user.avatarUrl || "https://picsum.photos/seed/picsum/200/300"}
-                      alt={user.name}
-                      className="size-full object-cover"
-                    />
-                  </div>
+                  <div className="size-10 rounded-full bg-gray-500 shrink-0 overflow-hidden bg-no-repeat bg-cover" style={{backgroundImage: `url(${user.avatarUrl})` || "https://picsum.photos/seed/picsum/200/300"}}></div>
                   <div className="px-3 text-sm text-left">
                     <h1 className="font-bold">{user.name}</h1>
                     <span className="text-gray-400 font-semibold">{`@${user.userId}`}</span>

@@ -14,9 +14,7 @@ export default async function CommentContainer({user, id, commentAction}: Commen
       <input type="text" name="postId" defaultValue={id} hidden/>
       <div className="flex">
         <div className="size-10 rounded-full bg-lighthover overflow-hidden shrink-0">
-          <Link href={`/${user.email}`} className="block size-full">
-            <img src={user.image || undefined} alt="" className="size-full object-cover"/>
-          </Link>
+          <Link href={`/${user.email}`} className="block size-full bg-no-repeat bg-cover" style={{backgroundImage: `url(${user.image})` || undefined}}></Link>
         </div>
         <div className="grow">
           <textarea

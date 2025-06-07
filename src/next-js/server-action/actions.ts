@@ -11,7 +11,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod/v4";
 import mongoose from "mongoose";
 import type { User as SessionUser } from "next-auth";
-import { clientCommentSchema, dbCommentSchema, dbDeCommentSchema } from "@/models/comment";
+import { clientCommentSchema, dbCommentSchema, DbCommentType, dbDeCommentSchema } from "@/models/comment";
 import { Comment } from "@/models/comment";
 
 export const getUniqueId = async (): Promise<UUID> => randomUUID();
@@ -97,7 +97,7 @@ const likeActionSchema = z.object({
     id: z.string().refine((val) => /^[0-9a-fA-f]{24}$/.test(val), "invalid postId")
 })
 
-export async function postLikeAction(formData: FormData) {
+export async function postLikeAction(formData: FormData): Promise<void> {
     try {
         const user = await isAuthorized();
         const dbUser = await User.findOne({githubId: user.id});
@@ -174,7 +174,7 @@ export async function getPost(postId: string): Promise<DbPostType> {
 };
 
 
-export async function createCommentAction(formData: FormData) {
+export async function createCommentAction(formData: FormData): Promise<void> {
     try {
         const user = await isAuthorized()
         const dbUser = await User.findOne({githubId: user.id});
@@ -209,7 +209,7 @@ export async function createCommentAction(formData: FormData) {
 }
 
 
-export async function getPostComments(postId: string) {
+export async function getPostComments(postId: string): Promise<DbCommentType> {
     try {
         await isAuthorized();
         const dbPostCommet = await Post.findOne({_id: new mongoose.Types.ObjectId(postId)}).populate([{ path: "owner" }, { path: "comments", populate: { path: "owner" }, }]);
@@ -223,11 +223,11 @@ export async function getPostComments(postId: string) {
 }
 
 
-export async function getCommentComments(commentId: string) {
+export async function getCommentComments(commentId: string): Promise<DbCommentType> {
     try {
         await isAuthorized();
         const dbCommet = await Comment.findOne({_id: new mongoose.Types.ObjectId(commentId)}).populate([{ path: "owner" }, { path: "comments", populate: { path: "owner" }, }]);
-        if(!dbCommet) throw new Error("Post not found.")
+        if(!dbCommet) throw new Error("Comment not found.")
         const parsedComment = dbCommentSchema.parse(dbCommet);
         return parsedComment;
     } catch (err) {
@@ -237,7 +237,7 @@ export async function getCommentComments(commentId: string) {
 }
 
 
-export async function commentLikeAction(formData: FormData) {
+export async function commentLikeAction(formData: FormData): Promise<void> {
     try {
         const user = await isAuthorized();
         const dbUser = await User.findOne({githubId: user.id});
@@ -261,7 +261,7 @@ export async function commentLikeAction(formData: FormData) {
 }
 
 
-export async function createCominCom(formData: FormData) {
+export async function createCominCom(formData: FormData): Promise<void> {
     try {
         const user = await isAuthorized()
         const dbUser = await User.findOne({githubId: user.id});
@@ -295,7 +295,7 @@ export async function createCominCom(formData: FormData) {
     }
 }
 
-export async function getUserId() {
+export async function getUserId(): Promise<string> {
     try {
         const user = await isAuthorized();
         const dbUser = await User.findOne({githubId: user.id});

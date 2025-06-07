@@ -20,9 +20,7 @@ export default async function NewPostDialog({user}: NewPostDialogProps) {
               <button type="submit" className="ml-auto font-medium text-blue-400 cursor-pointer" popoverTarget="navNewPost">Drafts</button>
           </div>
           <div className="grow flex px-4 py-2">
-              <div className="size-10 rounded-full bg-gray-500 shrink-0 overflow-hidden">
-                  <img src={user.image || undefined} alt={user.name || undefined} className="size-full object-cover" />
-              </div>
+              <div className="size-10 rounded-full bg-gray-500 shrink-0 overflow-hidden bg-no-repeat bg-cover" style={{backgroundImage: `url(${user.image})` || undefined}}></div>
               <div className="grow min-h-30">
                   <textarea name="title" id="title" placeholder="What's happening?" className="resize-none outline-none field-sizing-content text-xl p-2 text-white break-all" required></textarea>
               </div>

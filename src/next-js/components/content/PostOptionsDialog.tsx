@@ -24,7 +24,7 @@ type PostOptionsDialogProps = {
    userId: string
 } & Pick<DbPostType, "owner">;
 
-export default async function PostOptionsDialog({owner, user, userId}: PostOptionsDialogProps) {0
+export default async function PostOptionsDialog({owner, user, userId}: PostOptionsDialogProps) {
     const id = await getUniqueId()
     const anchor = { anchorName: `${id}-anchor` }
     const position = { positionAnchor: `${id}-anchor`, positionArea: "bottom center" }
@@ -41,6 +41,7 @@ export default async function PostOptionsDialog({owner, user, userId}: PostOptio
       <button type="button" className="p-2 rounded-full group hover:bg-lightblue translate-x-1/5 transition-colors cursor-pointer">
         <GrokIcon width={20} height={20} className="fill-gray-500 group-hover:fill-blue-500 transition-colors"/>
       </button>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <button type="button" popoverTarget={id} className="p-2 rounded-full group hover:bg-lightblue transition-colors cursor-pointer" style={anchor as any}>
         <MoreHoriIcon width={20} height={20} className="fill-gray-500 group-hover:fill-blue-500 transition-colors"/>
       </button>
