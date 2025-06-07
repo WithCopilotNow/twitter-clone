@@ -41,10 +41,11 @@ export default async function PostOptionsDialog({owner, user, userId}: PostOptio
       <button type="button" className="p-2 rounded-full group hover:bg-lightblue translate-x-1/5 transition-colors cursor-pointer">
         <GrokIcon width={20} height={20} className="fill-gray-500 group-hover:fill-blue-500 transition-colors"/>
       </button>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <button type="button" popoverTarget={id} className="p-2 rounded-full group hover:bg-lightblue transition-colors cursor-pointer" style={anchor as any}>
         <MoreHoriIcon width={20} height={20} className="fill-gray-500 group-hover:fill-blue-500 transition-colors"/>
       </button>
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <div popover="auto" id={id} className="bg-black text-white shadow-even rounded-xl w-max py-2" style={position as any}>
         {user.id != owner._id && <form className="flex flex-col">
           <button className="px-4 py-2 text-left hover:bg-lighthover cursor-pointer flex items-center gap-x-2" type="submit">

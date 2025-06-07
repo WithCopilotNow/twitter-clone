@@ -37,9 +37,10 @@ export default function VisibilityDailog({positionValue}: VisibilityDailogProps)
     }
   return (
     <div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <button type="button" popoverTarget={id} className="text-blue-500 p-4 pt-0" style={anchor as any}>{state}</button>
       <input type="text" name="visibility" value={state} readOnly={true} hidden/>
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <div popover="auto" id={id} className="w-2xs bg-black text-white rounded-xl shadow-even text-sm" style={position as any}>
         <div className="p-4">
             <h1 className="font-semibold text-base">Who can reply?</h1>

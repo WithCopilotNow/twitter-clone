@@ -18,11 +18,12 @@ export default async function Footer() {
         <Link href={`/${links.replaceAll(" ", "-").toLowerCase()}`} className="hover:underline inline-block">{links}</Link>
         <span className="mx-4">|</span>
       </span>))}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <button type="button" popoverTarget="moreFooterLinksDialog" className="inline-flex items-center mr-4 cursor-pointer" style={anchor as any}>
         <span className="hover:underline">More</span>
         <MoreHoriIcon width={16} height={16} className="fill-gray-500" />
       </button>
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <div popover="auto" id="moreFooterLinksDialog" className="shadow-even bg-black text-white w-max rounded-xl" style={position as any}>
         <ul>
           {moreLinks.map((link) => (

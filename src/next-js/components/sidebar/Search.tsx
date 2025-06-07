@@ -22,7 +22,7 @@ export default function Search() {
   }
   return (
     <div className="sticky top-0 w-full bg-black group z-10 pt-2">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <form
         action={formAction}
         className="flex items-center border-2 border-solid border-lighthover rounded-full pl-4 focus-within:border-2 focus-within:border-blue-400 z-10"
@@ -46,6 +46,7 @@ export default function Search() {
         />
         <button type="submit" hidden ref={subBtnRef}></button>
       </form>
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <div className="fixed hidden group-focus-within:block hover:block starting:opacity-0 transition-opacity delay-100 w-xs min-h-40 bg-black text-white rounded-xl shadow-even z-10" style={position as any}>
         {isPending ? (
           <div className="w-10 aspect-square rounded-full border-4 border-b-blue-500 border-gray-400 animate-spin mx-auto mt-8"></div>

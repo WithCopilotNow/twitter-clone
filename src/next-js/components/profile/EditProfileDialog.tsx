@@ -16,8 +16,8 @@ export default async function EditProfileDialog({bgUrl, avatarUrl, username}: Ed
     }
   return (
     <div className="flex justify-end p-4">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <button type="button" popoverTarget={id} className="px-4 py-1 rounded-full bg-black text-white shadow-even cursor-pointer hover:bg-lighthover">Edit Profile</button>
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <div popover="auto" id={id} className="w-xl max-h-[70dvh] top-1/2 left-1/2 -translate-1/2 shadow-even bg-black text-white backdrop:bg-lightblue rounded-2xl" style={scrollbar as any}>
         <form action="" className="pb-10">
           <FormHeader id={id}/>
