@@ -1,3 +1,4 @@
+import "server-only";
 import mongoose from "mongoose";
 import { dbPostsSchema, postSchema, PostType } from "./post";
 import { dbMediaSchema } from "./media";
