@@ -4,7 +4,7 @@ import { dbMediaSchema } from "./media";
 import { dbUserSchema } from "./user";
 import z from "zod/v4";
 
-export const Comment: mongoose.Model<PostType> = mongoose.models.Comment || mongoose.model<PostType>("Comment", postSchema);
+export const Comment: mongoose.Model<PostType> = mongoose.models?.Comment || mongoose.model<PostType>("Comment", postSchema);
 
 export const clientCommentSchema = z.object({
   title: z.string().nonempty().trim(),

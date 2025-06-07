@@ -1,4 +1,5 @@
 import { auth } from "@/auth"
+import { NextResponse } from "next/server";
 
 export default auth((req) => {
   if (!req.auth && req.nextUrl.pathname !== "/login") {
@@ -9,7 +10,7 @@ export default auth((req) => {
     const homeUrl = new URL("/home", req.nextUrl.origin);
     return Response.redirect(homeUrl);
   }
-  
+  return NextResponse.next();
 })
 
 export const config = {
