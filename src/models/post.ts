@@ -55,7 +55,7 @@ postSchema.pre("save", function(next){
     next()
 })
 
-export const Post: mongoose.Model<PostType> = mongoose.models?.Post || mongoose.model<PostType>("Post", postSchema);
+export const Post: mongoose.Model<PostType> = mongoose.models.Post || mongoose.model<PostType>("Post", postSchema);
 
 export const clientPostSchema = z.object({
   title: z.string().nonempty().trim(),

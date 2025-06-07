@@ -39,7 +39,7 @@ userSchema.virtual("userId").get(function(){
   return this.email.split("@")[0];
 })
 
-export const User: mongoose.Model<UserType> = mongoose.models?.User || mongoose.model<UserType>("User", userSchema);
+export const User: mongoose.Model<UserType> = mongoose.models.User || mongoose.model<UserType>("User", userSchema);
 
 export const dbUserSchema = z.object({
     _id: z.instanceof(mongoose.Types.ObjectId).transform((val) => val.toHexString()),
