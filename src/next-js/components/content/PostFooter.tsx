@@ -1,4 +1,4 @@
-import { bookmarkPostAction, getUserId } from "@/next-js/server-action/actions";
+import { bookmarkPostAction } from "@/next-js/server-action/actions";
 import CommentDialog from "./dialogs/CommentDialog";
 import RepostDialog from "./dialogs/RepostDialog";
 import ShareDialog from "./dialogs/ShareDialog";

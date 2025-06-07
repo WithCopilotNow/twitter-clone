@@ -1,4 +1,4 @@
-import { getUniqueId, getUserId } from "@/next-js/server-action/actions"
+import { getUniqueId } from "@/next-js/server-action/actions"
 import MoreHoriIcon from "../svg/MoreHoriIcon"
 import GrokIcon from "../svg/GrokIcon"
 import { DbPostType } from "@/models/post";
