@@ -29,11 +29,9 @@ export default async function MediaContainer({
 }: MediaContainerProps) {
   return (
     <div className={className}>
-      {UploadMedia.map(async ({ Icon, text, name }, index) => {
-        const id = await getUniqueId();
-        return (
+      {UploadMedia.map(({ Icon, text, name }, index) => (
           <label
-            key={id}
+            key={index}
             className="hover:bg-lighthover p-2 rounded-full relative group cursor-pointer"
           >
             <Icon className="fill-blue-500" />
@@ -42,8 +40,8 @@ export default async function MediaContainer({
             </span>
              {index === 0 && <input type="file" name={name} hidden accept=".png, .jpg, .jpeg"/>}
           </label>
-        );
-      })}
+        )
+      )}
     </div>
   );
 }

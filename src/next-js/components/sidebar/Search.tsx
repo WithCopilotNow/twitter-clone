@@ -55,9 +55,8 @@ export default function Search() {
                   onClick={() => {
                     router.push(`/${user.userId}`);
                   }}
-                  className="w-full flex items-center hover:bg-lighthover p-4 rounded-lg"
-                >
-                  <div className="size-10 rounded-full bg-gray-500 shrink-0 overflow-hidden bg-no-repeat bg-cover" style={{backgroundImage: `url(${user.avatarUrl})` || "https://picsum.photos/seed/picsum/200/300"}}></div>
+                  className="w-full flex items-center hover:bg-lighthover p-4 rounded-lg">
+                  <div className="size-10 rounded-full bg-gray-500 shrink-0 overflow-hidden bg-no-repeat bg-cover" style={{backgroundImage: `url(${user.avatarUrl})` || `url("https://picsum.photos/seed/picsum/200/300")`}}></div>
                   <div className="px-3 text-sm text-left">
                     <h1 className="font-bold">{user.name}</h1>
                     <span className="text-gray-400 font-semibold">{`@${user.userId}`}</span>

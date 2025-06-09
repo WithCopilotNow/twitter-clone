@@ -14,8 +14,8 @@ export default async function Footer() {
   }
   return (
     <footer className="text-gray-500 px-4 pb-16 text-base">
-      {footerLinks.map((links) => (<span key={links} className="w-max">
-        <Link href={`/${links.replaceAll(" ", "-").toLowerCase()}`} className="hover:underline inline-block">{links}</Link>
+      {footerLinks.map((link) => (<span key={link} className="w-max">
+        <Link href={`/${link.replaceAll(" ", "-").toLowerCase()}`} className="hover:underline inline-block">{link}</Link>
         <span className="mx-4">|</span>
       </span>))}
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}

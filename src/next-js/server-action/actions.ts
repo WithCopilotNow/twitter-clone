@@ -20,7 +20,7 @@ export const logoutAction = async (): Promise<void> => {
     try {
          await signOut({redirectTo: "/login"});
     } catch (err) {
-        console.log(err);
+        console.log(`Login error: ${err}`);
         throw err;
     }
 };
@@ -43,7 +43,7 @@ export const searchAction = async (prevState: DbUserType[], formData: FormData):
         const users = dbUsersSchema.parse(dbUsers);
         return users;
     } catch (err) {
-        console.log(err);
+        console.log(`Search Action error: ${err}`);
         throw err;
     }
 }
@@ -117,7 +117,7 @@ export async function postLikeAction(formData: FormData): Promise<void> {
         await dbPost.save();
         revalidatePath(`/post/${parsedPost._id.toHexString()}`);
     } catch (err) {
-        console.log(err);
+        console.log(`PostLikeAction error: ${err}`);
         throw err;
     }
 }
@@ -255,7 +255,7 @@ export async function commentLikeAction(formData: FormData): Promise<void> {
         dbComment.likes = dbComment.likes.filter((like) => like.toHexString() != parsedUser._id);
         await dbComment.save();
     } catch (err) {
-        console.log(err)
+        console.log(`Comment like action error: ${err}`)
         throw err;
     }
 }
@@ -303,7 +303,7 @@ export async function getUserId(): Promise<string> {
         const parsedUser = dbUserSchema.parse(dbUser);
         return parsedUser._id;
     } catch (error) {
-        console.log(error);
+        console.log(`Get userId Error: ${error}`);
         throw error;
     }
 }
