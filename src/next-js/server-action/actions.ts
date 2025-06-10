@@ -14,7 +14,6 @@ import { z } from "zod/v4";
 import { dbConnect } from "@/lib/db";
 
 
-dbConnect().catch((err) => console.error('Failed to initialize database:', err));
 export const getUniqueId = async (): Promise<UUID> => randomUUID();
 export const loginAction = async (): Promise<void> => await signIn("github");
 export const logoutAction = async (): Promise<void> => await signOut({redirectTo: "/login"});
@@ -98,6 +97,7 @@ export async function getPosts(): Promise<DbPostType[]> {
     const session = await auth();
     if (!session?.user) return redirect('/login');
 
+    dbConnect().catch((err) => console.error('Failed to initialize database:', err));
     const dbUser = await User.findOne({ githubId: session.user.id }, 'following').lean();
     if (!dbUser) throw new Error('User not found');
 
