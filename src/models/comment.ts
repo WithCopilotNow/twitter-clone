@@ -1,9 +1,9 @@
 import "server-only";
 import mongoose from "mongoose";
 import { z } from "zod/v4";
-import { postSchema, PostType } from "./Post";
-import { dbMediaSchema } from "./Media";
-import { dbUserSchema } from "./User";
+import { postSchema, PostType } from "./post";
+import { dbMediaSchema } from "./media";
+import { dbUserSchema } from "./user";
 
 export type CommentType = PostType; 
 
@@ -26,7 +26,7 @@ export const clientCommentSchema = z.object({
     ),
 });
 
-export const dbCommentSchema = z.object({
+export const dbCommentSchema = z.object({ 
   _id: z.instanceof(mongoose.Types.ObjectId).transform((val) => val.toHexString()),
   title: z.string().min(1, "Title is required"),
   visibility: z.enum(["Everyone can reply", "Accounts you follow", "Verified accounts", "Only accounts you mention"]),

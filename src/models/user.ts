@@ -1,7 +1,7 @@
 import "server-only";
 import mongoose from "mongoose";
 import { z } from "zod/v4";
-import { dbMediaSchema, mediaSchema, MediaType } from "./Media";
+import { dbMediaSchema, mediaSchema, MediaType } from "./media";
 
 export type UserType = {
   _id?: mongoose.Types.ObjectId;

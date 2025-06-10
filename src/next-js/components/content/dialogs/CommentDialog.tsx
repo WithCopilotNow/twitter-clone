@@ -4,10 +4,10 @@ import SubmitButton from "../SubmitButton";
 import CloseIcon from "../../svg/CloseIcon";
 import Link from "next/link";
 import { getTime } from "@/next-js/utility/getTime";
-import { DbPostType } from "@/models/Post";
+import { DbPostType } from "@/models/post";
 import { User } from "next-auth";
 import MediaContainer from "../../navbar/MediaContainer";
-import { DbCommentType } from "@/models/Comment";
+import { DbCommentType } from "@/models/comment";
 
 type CommentDialogProps = {
   postData: DbPostType | DbCommentType,

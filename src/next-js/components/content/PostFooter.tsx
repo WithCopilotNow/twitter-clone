@@ -5,9 +5,9 @@ import ShareDialog from "./dialogs/ShareDialog";
 import ViewsDialog from "./dialogs/ViewsDialog";
 import LikeButton from "./LikeButton";
 import BookmarkButton from "./BookmarkButton";
-import { DbPostType } from "@/models/Post";
+import { DbPostType } from "@/models/post";
 import { User } from "next-auth";
-import { DbCommentType } from "@/models/Comment";
+import { DbCommentType } from "@/models/comment";
 
 type PostFooterType = {
   postData: DbPostType | DbCommentType,

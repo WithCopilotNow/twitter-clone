@@ -1,8 +1,8 @@
 import "server-only";
 import mongoose from "mongoose";
 import { z } from "zod/v4";
-import { dbUserSchema } from "./User";
-import { dbMediaSchema, mediaSchema, MediaType } from "./Media";
+import { dbUserSchema } from "./user";
+import { dbMediaSchema, mediaSchema, MediaType } from "./media";
 
 export type PostType = {
   _id?: mongoose.Types.ObjectId;

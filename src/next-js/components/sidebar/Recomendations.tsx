@@ -1,4 +1,4 @@
-import { UserType } from "@/models/User"
+import { UserType } from "@/models/user"
 import Link from "next/link";
 
 const dummyRecomendations: UserType[] = [

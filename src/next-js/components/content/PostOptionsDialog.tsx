@@ -1,7 +1,7 @@
 import { getUniqueId } from "@/next-js/server-action/actions"
 import MoreHoriIcon from "../svg/MoreHoriIcon"
 import GrokIcon from "../svg/GrokIcon"
-import { DbPostType } from "@/models/Post";
+import { DbPostType } from "@/models/post";
 import UnfollowIcon from "../svg/UnfollowIcon";
 import FollowIcon from "../svg/FollowIcon";
 import BlockIcon from "../svg/BlockIcon";

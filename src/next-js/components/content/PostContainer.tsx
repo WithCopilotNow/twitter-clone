@@ -1,4 +1,4 @@
-import { DbPostType } from "@/models/Post"
+import { DbPostType } from "@/models/post"
 import { getTime } from "@/next-js/utility/getTime";
 import PostOptionsDialog from "./PostOptionsDialog";
 import PostFooter from "./PostFooter";

@@ -2,7 +2,7 @@
 
 import { useActionState, useRef, useState } from "react";
 import SearchIcon from "../svg/client-svg/SearchIcon";
-import { DbUserType } from "@/models/User";
+import { DbUserType } from "@/models/user";
 import { useRouter } from "next/navigation";
 import { searchAction } from "@/next-js/server-action/actions";
 

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import LoadingSpinner from "./LoadingSpinner";
 import PostContainer from "./PostContainer";
-import { DbPostType } from "@/models/Post";
+import { DbPostType } from "@/models/post";
 import { User } from "next-auth";
 
 type PostsContainerProps = {

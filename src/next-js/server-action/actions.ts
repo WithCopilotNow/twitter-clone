@@ -2,13 +2,13 @@
 
 import "server-only";
 import { auth, signIn, signOut } from "@/auth";
-import { dbUserSchema, dbUsersSchema, DbUserType, User } from "@/models/User";
-import { clientPostSchema, dbPostSchema, dbPostsSchema, DbPostType, Post, PostType } from "@/models/Post";
+import { dbUserSchema, dbUsersSchema, DbUserType, User } from "@/models/user";
+import { clientPostSchema, dbPostSchema, dbPostsSchema, DbPostType, Post, PostType } from "@/models/post";
 import { redirect } from "next/navigation";
 import { randomUUID, UUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { clientCommentSchema, CommentType, dbCommentSchema, dbCommentsSchema, DbCommentType } from "@/models/Comment";
-import { Comment } from "@/models/Comment";
+import { clientCommentSchema, CommentType, dbCommentSchema, dbCommentsSchema, DbCommentType } from "@/models/comment";
+import { Comment } from "@/models/comment";
 import mongoose from "mongoose";
 import { dbInit } from "@/lib/dbInit";
 import { z } from "zod/v4";

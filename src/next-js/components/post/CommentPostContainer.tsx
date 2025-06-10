@@ -5,7 +5,7 @@ import PostFooter from "../content/PostFooter"
 import { getTime } from "@/next-js/utility/getTime"
 import { getUserId } from "@/next-js/server-action/actions"
 import Image from "next/image"
-import { DbPostType } from "@/models/Post"
+import { DbPostType } from "@/models/post"
 
 type CommentPostContainerProps = {
     postData: DbPostType,

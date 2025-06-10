@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { DbPostType } from "@/models/Post";
+import { DbPostType } from "@/models/post";
 import ContentHeader from "@/next-js/components/content/ContentHeader";
 import NewPostContainer from "@/next-js/components/content/NewPostContainer";
 import PostsContainer from "@/next-js/components/content/PostsContainer";
