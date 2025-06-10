@@ -2,308 +2,480 @@
 
 import "server-only";
 import { auth, signIn, signOut } from "@/auth";
-import { connectToDatabase, } from "@/lib/db";
-import { dbUserSchema, dbUsersSchema, DbUserType, User } from "@/models/user";
-import { clientPostSchema, dbPostSchema, dbPostsSchema, DbPostType, Post, PostType } from "@/models/post";
+import { dbUserSchema, dbUsersSchema, DbUserType, User } from "@/models/User";
+import { clientPostSchema, dbPostSchema, dbPostsSchema, DbPostType, Post, PostType } from "@/models/Post";
 import { redirect } from "next/navigation";
 import { randomUUID, UUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { z } from "zod/v4";
+import { clientCommentSchema, CommentType, dbCommentSchema, dbCommentsSchema, DbCommentType } from "@/models/Comment";
+import { Comment } from "@/models/Comment";
 import mongoose from "mongoose";
-import type { User as SessionUser } from "next-auth";
-import { clientCommentSchema, dbCommentSchema, DbCommentType, dbDeCommentSchema } from "@/models/comment";
-import { Comment } from "@/models/comment";
+import { dbInit } from "@/lib/dbInit";
+import { z } from "zod/v4";
 
+
+dbInit().catch((err) => console.error('Failed to initialize database:', err));
 export const getUniqueId = async (): Promise<UUID> => randomUUID();
-export const loginAction = async (): Promise<void> => { await signIn("github") };
-export const logoutAction = async (): Promise<void> => {
-    try {
-         await signOut({redirectTo: "/login"});
-    } catch (err) {
-        console.log(`Login error: ${err}`);
-        throw err;
-    }
-};
+export const loginAction = async (): Promise<void> => await signIn("github");
+export const logoutAction = async (): Promise<void> => await signOut({redirectTo: "/login"});
 
-async function isAuthorized(): Promise<SessionUser> {
+const searchQuerySchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .max(100, "Search query is too long");
+
+export async function searchAction(
+  prevState: DbUserType[],
+  formData: FormData
+): Promise<DbUserType[]> {
+  try {
     const session = await auth();
-    if(!session || !session.user) return redirect("/login");
-    await connectToDatabase();
-    return session.user;
+    if (!session?.user) redirect('/login');
+
+    const query = searchQuerySchema.parse(formData.get('search'));
+    const dbUsers = await User.find({ name: { $regex: query, $options: 'i' } });
+
+    return dbUsersSchema.parse(dbUsers.map((user) => user.toObject()));
+  } catch (error) {
+    console.error('Search action failed:', error);
+    throw new Error('Failed to search users');
+  }
 }
 
-const searchQuerySchema = z.string().toLowerCase().trim();
-export const searchAction = async (prevState: DbUserType[], formData: FormData): Promise<DbUserType[]> => {
-    try {
-        await isAuthorized();
-        const query = searchQuerySchema.parse(formData.get("search"));
-        if(!query) return [];
-        const dbUsers = await User.find({name: {$regex: query, $options: "i"}});
-        if(dbUsers.length < 1) return [];
-        const users = dbUsersSchema.parse(dbUsers);
-        return users;
-    } catch (err) {
-        console.log(`Search Action error: ${err}`);
-        throw err;
+
+
+
+export async function createPostAction(formData: FormData): Promise<void> {
+  try {
+    const session = await auth();
+    if (!session?.user) return redirect('/login');
+
+    const parsedPost = clientPostSchema.parse(Object.fromEntries(formData));
+
+    const dbUser = await User.findOneAndUpdate(
+      { githubId: session.user.id },
+      { $inc: { postCount: 1 } },
+      { new: true }
+    );
+
+    if (!dbUser) throw new Error('User not found');
+    const parsedUser = dbUserSchema.parse(dbUser.toObject());
+
+    const postData: Pick<PostType, 'owner' | 'title' | 'visibility' | 'media'> = {
+      owner: new mongoose.Types.ObjectId(parsedUser._id),
+      title: parsedPost.title,
+      visibility: parsedPost.visibility,
+    };
+
+    if (parsedPost.file && parsedPost.file.size > 0) {
+      const buffer = Buffer.from(await parsedPost.file.arrayBuffer());
+      postData.media = {
+        size: parsedPost.file.size,
+        mimeType: parsedPost.file.type,
+        mediaName: parsedPost.file.name,
+        source: buffer.toString('base64'),
+        lastModified: new Date(),
+      };
     }
+
+    await Post.create(postData);
+
+    revalidatePath('/home');
+    revalidatePath(`/${parsedUser.userId}`);
+  } catch (error) {
+    console.error('Failed to create post:', error);
+    throw new Error('Failed to create post');
+  }
 }
 
-export const createPostAction = async (formData: FormData): Promise<void> => {
-    try {
-        const user = await isAuthorized()
-        const dbUser = await User.findOne({githubId: user.id});
-        if(!dbUser) throw new Error("User not found");
-        const parsedUser = dbUserSchema.parse(dbUser);
-        const clientPost = Object.fromEntries(formData);
-        const parsedPost = clientPostSchema.parse(clientPost)
-        const postData: Pick<PostType, "owner" | "title" | "visibility" | "media"> = {
-            owner: new mongoose.Types.ObjectId(parsedUser._id), 
-            title: parsedPost.title,
-            visibility: parsedPost.visibility,
-        }
-        if(parsedPost.file.size > 0){
-            const buffer = Buffer.from(await parsedPost.file.arrayBuffer());
-            postData.media = {
-                size: parsedPost.file.size,
-                mimeType: parsedPost.file.type,
-                mediaName: parsedPost.file.name,
-                source: buffer.toString("base64")
-            }
-        }
-        await Post.create(postData);
-        dbUser.postCount++;
-        await dbUser.save()
-        revalidatePath("/home")
-    } catch (err) {
-        console.error(`Error while composing post: ${err}`);
-        throw err;
-    }
+
+
+
+
+export async function getPosts(): Promise<DbPostType[]> {
+  try {
+    const session = await auth();
+    if (!session?.user) return redirect('/login');
+
+    const dbUser = await User.findOne({ githubId: session.user.id }, 'following').lean();
+    if (!dbUser) throw new Error('User not found');
+
+    const dbPosts = await Post.find({
+      $or: [
+        { visibility: 'Everyone can reply' }, 
+        { owner: { $in: dbUser.following || [] } }, 
+      ],
+    })
+      .populate({ path: 'owner', })
+      .sort({ createdAt: -1 }) 
+      .limit(20);
+
+    return dbPosts.length ? dbPosts.map((post) => dbPostSchema.parse(post.toObject())) : [];
+  } catch (error) {
+    console.error('Failed to fetch posts:', error);
+    throw new Error('Failed to fetch posts');
+  }
 }
 
-export const getPosts = async (): Promise<DbPostType[]> => {
-    try {
-        await isAuthorized()
-        const dbPosts = await Post.find().populate("owner");
-        const parsedPosts = dbPostsSchema.parse(dbPosts);
-        return parsedPosts;
-    } catch (err) {
-        console.error("Error while getting posts from the database.", err)
-        throw err;
-    }
-}
+
+
+
 
 const likeActionSchema = z.object({
-    likePost: z.enum(["true", "false"]),
-    id: z.string().refine((val) => /^[0-9a-fA-f]{24}$/.test(val), "invalid postId")
-})
+  likeStatus: z.enum(['like', 'unlike']),
+  id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid post ID'),
+});
 
 export async function postLikeAction(formData: FormData): Promise<void> {
-    try {
-        const user = await isAuthorized();
-        const dbUser = await User.findOne({githubId: user.id});
-        if(!dbUser) throw new Error("User not found");
-        const parsedUser = dbUserSchema.parse(dbUser);
-        const parsedLikeData = likeActionSchema.parse(Object.fromEntries(formData));
-        const postId = new mongoose.Types.ObjectId(parsedLikeData.id);
-        const dbPost = await Post.findOne({_id: postId}).populate("owner");
-        if(!dbPost) throw new Error("Post not found");
-        const parsedPost = dbPostSchema.parse(dbPost);
-        if(parsedLikeData.likePost === "true"){
-            dbPost.likes.push(new mongoose.Types.ObjectId(parsedUser._id));
-            await dbPost.save();
-            return;
-        }
-        dbPost.likes = parsedPost.likes.filter((like) => like.toHexString() != parsedUser._id);
-        await dbPost.save();
-        revalidatePath(`/post/${parsedPost._id.toHexString()}`);
-    } catch (err) {
-        console.log(`PostLikeAction error: ${err}`);
-        throw err;
-    }
+  try {
+    const session = await auth();
+    if (!session?.user) redirect('/login');
+
+    const dbUser = await User.findOne({ githubId: session.user.id });
+    if (!dbUser) throw new Error('User not found');
+    const parsedUser = dbUserSchema.parse(dbUser.toObject());
+
+    const parsedLikeData = likeActionSchema.parse(Object.fromEntries(formData));
+
+    const postId = new mongoose.Types.ObjectId(parsedLikeData.id);
+    const userId = new mongoose.Types.ObjectId(parsedUser._id);
+    const update = parsedLikeData.likeStatus === 'like'
+      ? { $addToSet: { likes: userId } } 
+      : { $pull: { likes: userId } };
+
+    const dbPost = await Post.findByIdAndUpdate(postId, update, { new: true });
+    if (!dbPost) throw new Error('Post not found');
+
+    revalidatePath('/home');
+    revalidatePath(`/post/${parsedLikeData.id}`);
+  } catch (error) {
+    console.error('Failed to update post like:', error);
+    throw new Error('Failed to like/unlike post');
+  }
 }
+
+
+
 
 export async function bookmarkPostAction() {}
 
-type GetUserProps = {
-    email: string
+const getUserPropsSchema = z.object({
+  email: z.email().max(255, 'Email is too long'),
+});
+
+export async function getUser({ email }: { email: string }): Promise<DbUserType> {
+  try {
+    const validatedProps = getUserPropsSchema.parse({ email });
+
+    const session = await auth();
+    if (!session?.user) return redirect('/login');
+
+    const dbUser = await User.findOne({ email: validatedProps.email });
+    if (!dbUser) throw new Error('User not found');
+
+    return dbUserSchema.parse(dbUser.toObject());
+  } catch (error) {
+    console.error('Failed to fetch user:', error);
+    throw new Error('Failed to fetch user');
+  }
 }
 
-export async function getUser({email}: GetUserProps): Promise<DbUserType> {
-    try {
-        await isAuthorized();
-        const dbUser = await User.findOne({email});
-        if(!dbUser) throw new Error("User not found.");
-        const parsedUser = dbUserSchema.parse(dbUser);
-        return parsedUser;
-    } catch (err) {
-        console.log(`Error while getting the User from the server: ${err}`);
-        throw err;
-    }
+
+
+
+
+const getUserPostsPropsSchema = z.object({
+  email: z.email().max(255, 'Email is too long'),
+});
+
+export async function getUserPosts({ email }: { email: string }): Promise<DbPostType[]> {
+  try {
+    const validatedProps = getUserPostsPropsSchema.parse({ email });
+
+    const session = await auth();
+    if (!session?.user) return redirect('/login');
+
+    const dbUser = await User.findOne({ email: validatedProps.email }).lean();
+    if (!dbUser) throw new Error('User not found');
+
+    const dbPosts = await Post.find({ owner: dbUser._id })
+      .sort({ createdAt: -1 })
+      .populate({ path: 'owner', })
+      .limit(20)
+
+    return dbPostsSchema.parse(dbPosts.map((post) => post.toObject()));
+  } catch (error) {
+    console.error('Failed to fetch user posts:', error);
+    throw new Error('Failed to fetch user posts');
+  }
 }
 
-type GetUserPostsProps = {
-    email: string
+
+
+
+const getPostPropsSchema = z.object({
+  id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid post ID'),
+});
+
+export async function getPost({ id }: { id: string }): Promise<DbPostType> {
+  try {
+    const validatedProps = getPostPropsSchema.parse({ id });
+
+    const session = await auth();
+    if (!session?.user) return redirect('/login');
+
+    const postId = new mongoose.Types.ObjectId(validatedProps.id);
+    const dbPost = await Post.findById(postId)
+      .populate({ path: "owner", })
+    if (!dbPost) throw new Error('Post not found');
+
+    return dbPostSchema.parse(dbPost.toObject());
+  } catch (error) {
+    console.error('Failed to fetch post:', error);
+    throw new Error('Failed to fetch post');
+  }
 }
 
-export async function getUserPosts({email}: GetUserPostsProps): Promise<DbPostType[]> {
-    try {
-        await isAuthorized();
-        const dbUser = await User.findOne({email});
-        if(!dbUser) throw new Error("User not found.");
-        const dbPosts = await Post.find({owner: dbUser._id}).sort({createdAt: -1}).populate("owner");
-        if(dbPosts.length === 0) return [];
-        const parsedPosts = dbPostsSchema.parse(dbPosts);
-        return parsedPosts;
-    } catch (err) {
-        console.log(`Error while featching user posts: ${err}`);
-        throw err
-    }
-}
 
-export async function getPost(postId: string): Promise<DbPostType> {
-    try {
-        await isAuthorized();
-        const dbPostComment = await Post.findOne({_id: new mongoose.Types.ObjectId(postId)}).populate("owner");
-        if(!dbPostComment) throw new Error("Post not found.")
-        const parsedPost = dbPostSchema.parse(dbPostComment);
-        return parsedPost;
-    } catch (err) {
-        console.log(`Error while getting a post: ${err}`);
-        throw err;
-    }
-};
+
+
 
 
 export async function createCommentAction(formData: FormData): Promise<void> {
-    try {
-        const user = await isAuthorized()
-        const dbUser = await User.findOne({githubId: user.id});
-        if(!dbUser) throw new Error("User not found");
-        const parsedUser = dbUserSchema.parse(dbUser);
-        const clientCommentData = Object.fromEntries(formData);
-        const parsedClientCommentData = clientCommentSchema.parse(clientCommentData);
-        const dbPost = await Post.findOne({_id: new mongoose.Types.ObjectId(parsedClientCommentData.postId)}).populate("owner");
-        if(!dbPost) throw new Error("Post not found.");
-        const parsedPost = dbPostSchema.parse(dbPost);
-        const commentData: Pick<PostType, "owner" | "title" | "media"> = {
-            owner: new mongoose.Types.ObjectId(parsedUser._id), 
-            title: parsedClientCommentData.title,
-        }
-        if(parsedClientCommentData.file && parsedClientCommentData.file.size > 0){
-            const buffer = Buffer.from(await parsedClientCommentData.file.arrayBuffer());
-            commentData.media = {
-                size: parsedClientCommentData.file.size,
-                mimeType: parsedClientCommentData.file.type,
-                mediaName: parsedClientCommentData.file.name,
-                source: buffer.toString("base64")
-            }
-        }
-        const comment = await Comment.create(commentData);
-        dbPost.comments.push(comment._id);
-        dbPost.save();
-        revalidatePath(`/post/${parsedPost._id.toHexString()}`);
-    } catch (err) {
-        console.log(`Error while composing comment: ${err}`);
-        throw err;
+  try {
+    const session = await auth();
+    if (!session?.user) return redirect('/login');
+
+    const dbUser = await User.findOne({ githubId: session.user.id });
+    if (!dbUser) throw new Error('User not found');
+    const parsedUser = dbUserSchema.parse(dbUser.toObject());
+
+    const parsedComment = clientCommentSchema.parse(Object.fromEntries(formData));
+
+    const postId = new mongoose.Types.ObjectId(parsedComment.postId);
+    const dbPost = await Post.findById(postId).lean();
+    if (!dbPost) throw new Error('Post not found');
+
+    const commentData: Pick<CommentType, 'owner' | 'title' | 'visibility' | 'media'> = {
+      owner: new mongoose.Types.ObjectId(parsedUser._id),
+      title: parsedComment.title,
+      visibility: dbPost.visibility,
+    };
+
+    if (parsedComment.file && parsedComment.file.size > 0) {
+      const buffer = Buffer.from(await parsedComment.file.arrayBuffer());
+      commentData.media = {
+        size: parsedComment.file.size,
+        mimeType: parsedComment.file.type,
+        mediaName: parsedComment.file.name,
+        source: buffer.toString('base64'),
+        lastModified: new Date(),
+      };
     }
+
+    const newComment = await Comment.create(commentData);
+    await Post.findByIdAndUpdate(postId, { $push: { comments: newComment._id } }, { new: true });
+
+    revalidatePath(`/home`);
+    revalidatePath(`/post/${parsedComment.postId}`);
+  } catch (error) {
+    console.error('Failed to create comment:', error);
+    throw new Error('Failed to create comment');
+  }
 }
 
 
-export async function getPostComments(postId: string): Promise<DbCommentType> {
-    try {
-        await isAuthorized();
-        const dbPostCommet = await Post.findOne({_id: new mongoose.Types.ObjectId(postId)}).populate([{ path: "owner" }, { path: "comments", populate: { path: "owner" }, }]);
-        if(!dbPostCommet) throw new Error("Post not found.")
-        const parsedPostComment = dbCommentSchema.parse(dbPostCommet);
-        return parsedPostComment;
-    } catch (err) {
-        console.log(`Error while getting a post: ${err}`);
-        throw err;
-    }
+
+
+
+const getCommentsPropsSchema = z.object({
+  postId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid post ID'),
+});
+
+export async function getComments({ postId }: { postId: string }): Promise<DbCommentType[]> {
+  try {
+    const validatedProps = getCommentsPropsSchema.parse({ postId });
+
+    const session = await auth();
+    if (!session?.user) return redirect('/login');
+
+    const id = new mongoose.Types.ObjectId(validatedProps.postId);
+    const dbPost = await Post.findById(id).lean();
+    if (!dbPost) throw new Error('Post not found');
+
+    const dbComments = await Comment.find({ _id: { $in: dbPost.comments } })
+      .populate({ path: 'owner', })
+      .sort({ createdAt: -1 }) 
+      .limit(20) 
+
+    return dbComments.length ? dbCommentsSchema.parse(dbComments.map((comment) => comment.toObject())) : [];
+  } catch (error) {
+    console.error('Failed to fetch comments:', error);
+    throw new Error('Failed to fetch comments');
+  }
 }
 
 
-export async function getCommentComments(commentId: string): Promise<DbCommentType> {
-    try {
-        await isAuthorized();
-        const dbCommet = await Comment.findOne({_id: new mongoose.Types.ObjectId(commentId)}).populate([{ path: "owner" }, { path: "comments", populate: { path: "owner" }, }]);
-        if(!dbCommet) throw new Error("Comment not found.")
-        const parsedComment = dbCommentSchema.parse(dbCommet);
-        return parsedComment;
-    } catch (err) {
-        console.log(`Error while getting a post: ${err}`);
-        throw err;
-    }
+
+
+
+
+const getCommentCommentsPropsSchema = z.object({
+  commentId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid comment ID'),
+});
+
+export async function getCommentComments({ commentId }: { commentId: string }): Promise<DbCommentType[]> {
+  try {
+    const validatedProps = getCommentCommentsPropsSchema.parse({ commentId });
+
+    const session = await auth();
+    if (!session?.user) return redirect('/login');
+
+    const commentIdObj = new mongoose.Types.ObjectId(validatedProps.commentId);
+    const dbComment = await Comment.findById(commentIdObj)
+      .populate([
+        { path: 'owner', select: 'name email githubId avatarUrl' },
+        {
+          path: 'comments',
+          populate: { path: 'owner', },
+          options: { limit: 20, sort: { createdAt: -1 } },
+        },
+      ])
+
+    if (!dbComment) throw new Error('Comment not found');
+
+    return dbCommentsSchema.parse(dbComment.comments.map((comment) => comment.toJSON()) || []);
+  } catch (error) {
+    console.error('Failed to fetch comment comments:', error);
+    throw new Error('Failed to fetch comment comments');
+  }
 }
 
+
+
+
+
+
+export async function createNestedComment(formData: FormData): Promise<void> {
+  try {
+    const session = await auth();
+    if (!session?.user) return redirect('/login');
+
+    const dbUser = await User.findOne({ githubId: session.user.id });
+    if (!dbUser) throw new Error('User not found');
+    const parsedUser = dbUserSchema.parse(dbUser.toObject());
+
+    const parsedComment = clientCommentSchema.parse(Object.fromEntries(formData));
+
+    const parentCommentId = new mongoose.Types.ObjectId(parsedComment.postId);
+    const dbParentComment = await Comment.findById(parentCommentId).lean();
+    if (!dbParentComment) throw new Error('Parent comment not found');
+
+    const commentData: Pick<CommentType, 'owner' | 'title' | 'visibility' | 'media'> = {
+      owner: new mongoose.Types.ObjectId(parsedUser._id),
+      title: parsedComment.title,
+      visibility: dbParentComment.visibility,
+    };
+
+    if (parsedComment.file && parsedComment.file.size > 0) {
+      const buffer = Buffer.from(await parsedComment.file.arrayBuffer());
+      commentData.media = {
+        size: parsedComment.file.size,
+        mimeType: parsedComment.file.type,
+        mediaName: parsedComment.file.name,
+        source: buffer.toString('base64'),
+        lastModified: new Date(),
+      };
+    }
+
+    const newComment = await Comment.create(commentData);
+    await Comment.findByIdAndUpdate(parentCommentId, { $push: { comments: newComment._id } }, { new: true });
+
+    revalidatePath(`/posts`);
+  } catch (error) {
+    console.error('Failed to create nested comment:', error);
+    throw new Error('Failed to create nested comment');
+  }
+}
+
+
+
+
+
+
+const commentLikeActionSchema = z.object({
+  likeStatus: z.enum(['like', 'unlike']),
+  id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid comment ID'),
+});
 
 export async function commentLikeAction(formData: FormData): Promise<void> {
-    try {
-        const user = await isAuthorized();
-        const dbUser = await User.findOne({githubId: user.id});
-        if(!dbUser) throw new Error("User not found");
-        const parsedUser = dbUserSchema.parse(dbUser);
-        const parsedLikeData = likeActionSchema.parse(Object.fromEntries(formData));
-        const dbComment = await Comment.findOne({_id: new mongoose.Types.ObjectId(parsedLikeData.id)}).populate("owner");
-        if(!dbComment) throw new Error("Comment post not found.");
-        dbDeCommentSchema.parse(dbComment);
-        if(parsedLikeData.likePost === "true"){
-            dbComment.likes.push(new mongoose.Types.ObjectId(parsedUser._id));
-            await dbComment.save();
-            return;
-        }
-        dbComment.likes = dbComment.likes.filter((like) => like.toHexString() != parsedUser._id);
-        await dbComment.save();
-    } catch (err) {
-        console.log(`Comment like action error: ${err}`)
-        throw err;
-    }
+  try {
+    const session = await auth();
+    if (!session?.user) return redirect('/login');
+
+    const dbUser = await User.findOne({ githubId: session.user.id });
+    if (!dbUser) throw new Error('User not found');
+    const parsedUser = dbUserSchema.parse(dbUser.toObject());
+
+    const parsedLikeData = commentLikeActionSchema.parse(Object.fromEntries(formData));
+
+    const commentId = new mongoose.Types.ObjectId(parsedLikeData.id);
+    const userId = new mongoose.Types.ObjectId(parsedUser._id);
+    const update = parsedLikeData.likeStatus === 'like'
+      ? { $addToSet: { likes: userId } }
+      : { $pull: { likes: userId } };
+
+    const dbComment = await Comment.findByIdAndUpdate(commentId, update, { new: true }).lean();
+    if (!dbComment) throw new Error('Comment not found');
+
+    revalidatePath(`/home`);
+  } catch (error) {
+    console.error('Failed to like/unlike comment:', error);
+    throw new Error('Failed to like/unlike comment');
+  }
 }
 
 
-export async function createCominCom(formData: FormData): Promise<void> {
-    try {
-        const user = await isAuthorized()
-        const dbUser = await User.findOne({githubId: user.id});
-        if(!dbUser) throw new Error("User not found");
-        const parsedUser = dbUserSchema.parse(dbUser);
-        const clientComment = Object.fromEntries(formData);
-        const parsedClientCommentData = clientCommentSchema.parse(clientComment);
-        const dbPostComment = await Comment.findOne({_id: new mongoose.Types.ObjectId(parsedClientCommentData.postId)}).populate("owner");
-        if(!dbPostComment) throw new Error("Comment not found.");
-        dbDeCommentSchema.parse(dbPostComment);
-        const commentData: Pick<PostType, "owner" | "title" | "media"> = {
-            owner: new mongoose.Types.ObjectId(parsedUser._id), 
-            title: parsedClientCommentData.title,
-        }
-        if(parsedClientCommentData.file && parsedClientCommentData.file.size > 0){
-            const buffer = Buffer.from(await parsedClientCommentData.file.arrayBuffer());
-            commentData.media = {
-                size: parsedClientCommentData.file.size,
-                mimeType: parsedClientCommentData.file.type,
-                mediaName: parsedClientCommentData.file.name,
-                source: buffer.toString("base64")
-            }
-        }
-        const comment = await Comment.create(commentData);
-        dbPostComment.comments.push(comment._id);
-        dbPostComment.save();
-        revalidatePath(`/posts/${parsedClientCommentData.id}/comments/${parsedClientCommentData.postId}`)
-    } catch (err) {
-        console.log(`Error while composing comment: ${err}`);
-        throw err;
-    }
-}
+
+
 
 export async function getUserId(): Promise<string> {
+  try {
+    const session = await auth();
+    if (!session?.user) return redirect('/login');
+
+    const dbUser = await User.findOne({ githubId: session.user.id });
+    if (!dbUser) throw new Error('User not found');
+
+    return dbUserSchema.parse(dbUser.toObject())._id;
+  } catch (error) {
+    console.error('Failed to fetch user ID:', error);
+    throw new Error('Failed to fetch user ID');
+  }
+}
+
+
+
+const getCommentPropsSchema = z.object({
+  commentId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid comment ID'),
+});
+
+export async function getComment({commentId}: {commentId: string}): Promise<DbPostType> {
     try {
-        const user = await isAuthorized();
-        const dbUser = await User.findOne({githubId: user.id});
-        if(!dbUser) throw new Error("User not found");
-        const parsedUser = dbUserSchema.parse(dbUser);
-        return parsedUser._id;
+      const validatedProps = getCommentPropsSchema.parse({ commentId });
+
+      const session = await auth();
+      if (!session?.user) return redirect("/login");
+
+      const commentIdObj = new mongoose.Types.ObjectId(validatedProps.commentId);
+      const dbComment = await Comment.findById(commentIdObj).populate("owner");
+
+      if (!dbComment) throw new Error("Comment not found");
+
+      return dbCommentSchema.parse(dbComment.toObject());
     } catch (error) {
-        console.log(`Get userId Error: ${error}`);
-        throw error;
+      console.error("Failed to fetch comment comments:", error);
+      throw new Error("Failed to fetch comment comments");
     }
 }

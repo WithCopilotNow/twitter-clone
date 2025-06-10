@@ -3,16 +3,17 @@ import Link from "next/link"
 import PostOptionsDialog from "../content/PostOptionsDialog"
 import PostFooter from "../content/PostFooter"
 import { getTime } from "@/next-js/utility/getTime"
-import { DbCommentType } from "@/models/comment"
-import { createCominCom, getUserId } from "@/next-js/server-action/actions"
+import { createNestedComment, getUserId } from "@/next-js/server-action/actions"
 import Image from "next/image"
+import { DbPostType } from "@/models/Post"
 
 type CommentPostContainerProps = {
-    postData: DbCommentType,
+    postData: DbPostType,
     user: User,
-    likeAction: (formData: FormData) => void
+    likeAction: (formData: FormData) => void,
+    commentAction: (formData: FormData) => void
 }
-export default async function CommentPostContainer({postData, user, likeAction}: CommentPostContainerProps) {
+export default async function CommentPostContainer({postData, user, likeAction, commentAction}: CommentPostContainerProps) {
   const  {
       title,
       owner,
@@ -42,11 +43,11 @@ export default async function CommentPostContainer({postData, user, likeAction}:
       </div>
       <div>
         <p className="pt-1 pb-2">{title}</p>
-        {media && (<div className="w-full aspect-video rounded-2xl bg-lighthover overflow-hidden my-2">
+        {media && (<div className="w-full aspect-video rounded-2xl bg-lighthover overflow-hidden my-2 relative">
           <Image src={media.dataUrl} alt="" layout="fill" objectFit="contain"/>
         </div>)}
         <p className="text-gray-500 py-2 border-b-1 border-lighthover">{`${createdAt.toLocaleTimeString("en-IN", {hour: "2-digit", minute: "2-digit"})} . ${createdAt.toLocaleString("en-IN", {month: "short", year: "numeric"})}`}</p>
-        <PostFooter postData={postData} user={user} likeAction={likeAction} commentAction={createCominCom} userId={userId}/>
+        <PostFooter postData={postData} user={user} likeAction={likeAction} commentAction={commentAction} userId={userId}/>
       </div>
     </section>
   )

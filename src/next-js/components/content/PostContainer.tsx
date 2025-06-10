@@ -1,4 +1,4 @@
-import { DbPostType } from "@/models/post"
+import { DbPostType } from "@/models/Post"
 import { getTime } from "@/next-js/utility/getTime";
 import PostOptionsDialog from "./PostOptionsDialog";
 import PostFooter from "./PostFooter";
@@ -24,7 +24,7 @@ export default async function PostContainer({postData, user, likeAction, comment
       createdAt,
     } = postData;
     const time = await getTime(createdAt);
-    const url = (postId) ? `/posts/${postId}/comments/${_id.toHexString()}` : `/posts/${_id.toHexString()}`;
+    const url = (postId) ? `/posts/${postId}/comments/${_id}` : `/posts/${_id}`;
     const userId = await getUserId();
 
   return (

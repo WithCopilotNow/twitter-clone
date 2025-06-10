@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import LoadingSpinner from "./LoadingSpinner";
 import PostContainer from "./PostContainer";
-import { DbPostType } from "@/models/post";
+import { DbPostType } from "@/models/Post";
 import { User } from "next-auth";
 
 type PostsContainerProps = {
@@ -16,7 +16,7 @@ export default async function PostsContainer({dbPosts, user, likeAction, comment
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <section className="pb-50">
-        {dbPosts.map((post) => <PostContainer key={post._id.toHexString()} postData={post} user={user} likeAction={likeAction} commentAction={commentAction} postId={postId}/>)}
+        {dbPosts.map((post) => <PostContainer key={post._id} postData={post} user={user} likeAction={likeAction} commentAction={commentAction} postId={postId}/>)}
       </section>
     </Suspense>
   )

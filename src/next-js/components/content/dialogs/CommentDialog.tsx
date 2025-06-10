@@ -4,10 +4,10 @@ import SubmitButton from "../SubmitButton";
 import CloseIcon from "../../svg/CloseIcon";
 import Link from "next/link";
 import { getTime } from "@/next-js/utility/getTime";
-import { DbPostType } from "@/models/post";
+import { DbPostType } from "@/models/Post";
 import { User } from "next-auth";
 import MediaContainer from "../../navbar/MediaContainer";
-import { DbCommentType } from "@/models/comment";
+import { DbCommentType } from "@/models/Comment";
 
 type CommentDialogProps = {
   postData: DbPostType | DbCommentType,
@@ -44,7 +44,7 @@ export default async function CommentDialog({postData, user, commentAction, comm
         className="w-xl left-1/2 top-20 -translate-x-1/2 shadow-even bg-black text-white rounded-2xl backdrop:bg-lightblue"
       >
         <form action={commentAction} className="flex flex-col h-full">
-          <input type="text" name="postId" defaultValue={_id.toHexString()} hidden/>
+          <input type="text" name="postId" defaultValue={_id} hidden/>
           {commentParentId && <input type="text" name="id" defaultValue={commentParentId} hidden/>}
           <div className="pl-4 pr-8 py-4 flex items-center">
             <button
@@ -86,7 +86,7 @@ export default async function CommentDialog({postData, user, commentAction, comm
                 </h2>
               </div>
               <p>
-                <Link href={`/posts/${_id.toHexString()}`} className="block">
+                <Link href={`/posts/${_id}`} className="block">
                   {title}
                 </Link>
               </p>

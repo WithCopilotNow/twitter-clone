@@ -5,9 +5,9 @@ import ShareDialog from "./dialogs/ShareDialog";
 import ViewsDialog from "./dialogs/ViewsDialog";
 import LikeButton from "./LikeButton";
 import BookmarkButton from "./BookmarkButton";
-import { DbPostType } from "@/models/post";
+import { DbPostType } from "@/models/Post";
 import { User } from "next-auth";
-import { DbCommentType } from "@/models/comment";
+import { DbCommentType } from "@/models/Comment";
 
 type PostFooterType = {
   postData: DbPostType | DbCommentType,
@@ -22,13 +22,13 @@ export default async function PostFooter({postData, user, userId, likeAction, co
     _id,
     likes
   } = postData;
-  const isLiked = likes.some((like) => like.toHexString() === userId);
+  const isLiked = likes.some((like) => like === userId);
   return (
     <div className="flex justify-between items-center pb-1">
       <CommentDialog postData={postData} user={user} commentAction={commentAction}/>
       <RepostDialog />
       <form action={likeAction}>
-        <input type="text" name="id" defaultValue={_id.toHexString()} hidden/>
+        <input type="text" name="id" defaultValue={_id} hidden/>
         <LikeButton isLiked={isLiked} likesCount={likes.length}/>
       </form>
       <ViewsDialog />

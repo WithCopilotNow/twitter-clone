@@ -2,9 +2,9 @@
 
 import { useActionState, useRef, useState } from "react";
 import SearchIcon from "../svg/client-svg/SearchIcon";
-import { searchAction } from "@/next-js/server-action/actions";
-import { DbUserType } from "@/models/user";
+import { DbUserType } from "@/models/User";
 import { useRouter } from "next/navigation";
+import { searchAction } from "@/next-js/server-action/actions";
 
 const initialState: DbUserType[] = [];
 

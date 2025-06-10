@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/db";
-import { User } from "@/models/user";
+import { User } from "@/models/User";
+import { dbConnect } from "@/lib/db";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
-    await connectToDatabase();
+    await dbConnect();
     const { githubId, name, email, avatarUrl } = await req.json();
     if (!githubId) {
       return NextResponse.json({ error: "Missing githubId" }, { status: 400 });

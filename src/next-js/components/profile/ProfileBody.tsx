@@ -1,7 +1,7 @@
 import ProfileInfo from "./ProfileInfo";
 import Link from "next/link"
 import EditProfileDialog from "./EditProfileDialog";
-import { DbUserType } from "@/models/user";
+import { DbUserType } from "@/models/User";
 
 type ProfileBodyProps = {
     dbUser: DbUserType
