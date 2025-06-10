@@ -32,6 +32,7 @@ export async function searchAction(
     const session = await auth();
     if (!session?.user) redirect('/login');
 
+    await dbConnect()
     const query = searchQuerySchema.parse(formData.get('search'));
     const dbUsers = await User.find({ name: { $regex: query, $options: 'i' } });
 
@@ -50,6 +51,7 @@ export async function createPostAction(formData: FormData): Promise<void> {
     const session = await auth();
     if (!session?.user) return redirect('/login');
 
+    await dbConnect()
     const parsedPost = clientPostSchema.parse(Object.fromEntries(formData));
 
     const dbUser = await User.findOneAndUpdate(
@@ -97,7 +99,7 @@ export async function getPosts(): Promise<DbPostType[]> {
     const session = await auth();
     if (!session?.user) return redirect('/login');
 
-    dbConnect().catch((err) => console.error('Failed to initialize database:', err));
+    await dbConnect()
     const dbUser = await User.findOne({ githubId: session.user.id }, 'following').lean();
     if (!dbUser) throw new Error('User not found');
 
@@ -131,6 +133,8 @@ export async function postLikeAction(formData: FormData): Promise<void> {
   try {
     const session = await auth();
     if (!session?.user) redirect('/login');
+
+    await dbConnect()
 
     const dbUser = await User.findOne({ githubId: session.user.id });
     if (!dbUser) throw new Error('User not found');
@@ -171,6 +175,8 @@ export async function getUser({ email }: { email: string }): Promise<DbUserType>
     const session = await auth();
     if (!session?.user) return redirect('/login');
 
+    await dbConnect()
+
     const dbUser = await User.findOne({ email: validatedProps.email });
     if (!dbUser) throw new Error('User not found');
 
@@ -195,6 +201,8 @@ export async function getUserPosts({ email }: { email: string }): Promise<DbPost
 
     const session = await auth();
     if (!session?.user) return redirect('/login');
+
+    await dbConnect()
 
     const dbUser = await User.findOne({ email: validatedProps.email }).lean();
     if (!dbUser) throw new Error('User not found');
@@ -225,6 +233,8 @@ export async function getPost({ id }: { id: string }): Promise<DbPostType> {
     const session = await auth();
     if (!session?.user) return redirect('/login');
 
+    await dbConnect()
+
     const postId = new mongoose.Types.ObjectId(validatedProps.id);
     const dbPost = await Post.findById(postId)
       .populate({ path: "owner", })
@@ -246,6 +256,8 @@ export async function createCommentAction(formData: FormData): Promise<void> {
   try {
     const session = await auth();
     if (!session?.user) return redirect('/login');
+
+    await dbConnect()
 
     const dbUser = await User.findOne({ githubId: session.user.id });
     if (!dbUser) throw new Error('User not found');
@@ -300,6 +312,8 @@ export async function getComments({ postId }: { postId: string }): Promise<DbCom
     const session = await auth();
     if (!session?.user) return redirect('/login');
 
+    await dbConnect()
+
     const id = new mongoose.Types.ObjectId(validatedProps.postId);
     const dbPost = await Post.findById(id).lean();
     if (!dbPost) throw new Error('Post not found');
@@ -332,6 +346,8 @@ export async function getCommentComments({ commentId }: { commentId: string }): 
     const session = await auth();
     if (!session?.user) return redirect('/login');
 
+    await dbConnect()
+
     const commentIdObj = new mongoose.Types.ObjectId(validatedProps.commentId);
     const dbComment = await Comment.findById(commentIdObj)
       .populate([
@@ -361,6 +377,8 @@ export async function createNestedComment(formData: FormData): Promise<void> {
   try {
     const session = await auth();
     if (!session?.user) return redirect('/login');
+
+    await dbConnect()
 
     const dbUser = await User.findOne({ githubId: session.user.id });
     if (!dbUser) throw new Error('User not found');
@@ -414,6 +432,8 @@ export async function commentLikeAction(formData: FormData): Promise<void> {
     const session = await auth();
     if (!session?.user) return redirect('/login');
 
+    await dbConnect()
+
     const dbUser = await User.findOne({ githubId: session.user.id });
     if (!dbUser) throw new Error('User not found');
     const parsedUser = dbUserSchema.parse(dbUser.toObject());
@@ -445,6 +465,8 @@ export async function getUserId(): Promise<string> {
     const session = await auth();
     if (!session?.user) return redirect('/login');
 
+    await dbConnect()
+
     const dbUser = await User.findOne({ githubId: session.user.id });
     if (!dbUser) throw new Error('User not found');
 
@@ -467,6 +489,8 @@ export async function getComment({commentId}: {commentId: string}): Promise<DbPo
 
       const session = await auth();
       if (!session?.user) return redirect("/login");
+
+      await dbConnect()
 
       const commentIdObj = new mongoose.Types.ObjectId(validatedProps.commentId);
       const dbComment = await Comment.findById(commentIdObj).populate("owner");
