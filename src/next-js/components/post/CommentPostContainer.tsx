@@ -3,7 +3,7 @@ import Link from "next/link"
 import PostOptionsDialog from "../content/PostOptionsDialog"
 import PostFooter from "../content/PostFooter"
 import { getTime } from "@/next-js/utility/getTime"
-import { createNestedComment, getUserId } from "@/next-js/server-action/actions"
+import { getUserId } from "@/next-js/server-action/actions"
 import Image from "next/image"
 import { DbPostType } from "@/models/Post"
 
