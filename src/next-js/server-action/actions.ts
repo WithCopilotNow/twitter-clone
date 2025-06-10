@@ -10,11 +10,11 @@ import { revalidatePath } from "next/cache";
 import { clientCommentSchema, CommentType, dbCommentSchema, dbCommentsSchema, DbCommentType } from "@/models/comment";
 import { Comment } from "@/models/comment";
 import mongoose from "mongoose";
-import { dbInit } from "@/lib/dbInit";
 import { z } from "zod/v4";
+import { dbConnect } from "@/lib/db";
 
 
-dbInit().catch((err) => console.error('Failed to initialize database:', err));
+dbConnect().catch((err) => console.error('Failed to initialize database:', err));
 export const getUniqueId = async (): Promise<UUID> => randomUUID();
 export const loginAction = async (): Promise<void> => await signIn("github");
 export const logoutAction = async (): Promise<void> => await signOut({redirectTo: "/login"});
